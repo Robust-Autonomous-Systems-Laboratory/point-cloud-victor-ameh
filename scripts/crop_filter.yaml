@@ -4,13 +4,13 @@ filters:
     params:
       input_pointcloud_layer: "map"
       inside_pointcloud_layer: "map_cropped"
-      bounding_box_min: [-50.0, -50.0, -50.0]
-      bounding_box_max: [50.0, 50.0, 50.0]
+      bounding_box_min: [-50.0, -50.0, -3.0]
+      bounding_box_max: [50.0, 50.0, 6.0]
 
   # Also crop the static map layer
   - class_name: mp2p_icp_filters::FilterBoundingBox
     params:
       input_pointcloud_layer: "static_map"
       inside_pointcloud_layer: "static_map_cropped"
-      bounding_box_min: [-50.0, -50.0, -50.0]
-      bounding_box_max: [50.0, 50.0, 50.0]
+      bounding_box_min: [-50.0, -50.0, -3.0]
+      bounding_box_max: [50.0, 50.0, 6.0]
