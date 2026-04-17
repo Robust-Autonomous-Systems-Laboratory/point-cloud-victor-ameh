@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+k<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>EE5531 - Victor - 3D LiDAR Map v5</title>
+  <title>EE5531 - Victor - 3D LiDAR Map</title>
 
   <link rel="stylesheet" type="text/css" href="./resources/page_template/libs/potree/potree.css">
   <link rel="stylesheet" type="text/css" href="./resources/page_template/libs/jquery-ui/jquery-ui.min.css">
@@ -52,29 +52,13 @@
     .potree_menu_toggle {
       display: none !important;
     }
-
-    #statusbox {
-      position: fixed;
-      right: 12px;
-      bottom: 12px;
-      z-index: 1200;
-      max-width: 420px;
-      background: rgba(0, 0, 0, 0.85);
-      color: #fff;
-      padding: 10px 12px;
-      font: 13px/1.4 monospace;
-      border: 1px solid #444;
-      border-radius: 8px;
-      white-space: pre-wrap;
-    }
   </style>
 </head>
 
 <body>
-  <div id="titlebar">EE5531 - Victor - 3D LiDAR Map v5</div>
+  <div id="titlebar">EE5531 - Victor - 3D LiDAR Map</div>
   <div id="potree_render_area"></div>
   <div id="potree_sidebar_container"></div>
-  <div id="statusbox">Loading viewer...</div>
 
   <script src="./resources/page_template/libs/jquery/jquery-3.1.1.min.js"></script>
   <script src="./resources/page_template/libs/spectrum/spectrum.js"></script>
@@ -90,20 +74,14 @@
   <script src="./resources/page_template/libs/plasio/js/laslaz.js"></script>
 
   <script>
-    const statusBox = document.getElementById("statusbox");
-    const metadataUrl = "./pointclouds/victor_0.mcap/metadata.json";
-
-    function setStatus(msg) {
-      statusBox.textContent = msg;
-    }
-
     window.viewer = new Potree.Viewer(document.getElementById("potree_render_area"));
+
     viewer.setEDLEnabled(false);
     viewer.setFOV(60);
     viewer.setPointBudget(2000000);
     viewer.setBackground("black");
 
-    Potree.loadPointCloud(metadataUrl, "map", function (e) {
+    Potree.loadPointCloud("./pointclouds/victor_0.mcap/metadata.json", "map", function (e) {
       const pointcloud = e.pointcloud;
       const material = pointcloud.material;
 
@@ -111,36 +89,13 @@
       material.elevationRange = [-2, 8];
       material.pointSizeType = Potree.PointSizeType.ADAPTIVE;
       material.shape = Potree.PointShape.SQUARE;
-      material.size = 1.5;
+      material.size = 2.0;
 
       viewer.scene.addPointCloud(pointcloud);
 
-      const box = pointcloud.boundingBox.clone();
-      const center = box.getCenter(new THREE.Vector3());
-      const size = box.getSize(new THREE.Vector3());
-      const maxDim = Math.max(size.x, size.y, size.z);
-
-      const camPos = new THREE.Vector3(
-        center.x + maxDim * 1.2,
-        center.y - maxDim * 1.2,
-        center.z + maxDim * 0.6
-      );
-
-      viewer.scene.view.position.copy(camPos);
-      viewer.scene.view.lookAt(center);
-
-      setTimeout(() => {
-        try {
-          viewer.fitToScreen();
-        } catch (err) {
-          console.warn(err);
-        }
-      }, 300);
-
-      setStatus(
-        `Loaded.\nCenter: ${center.x.toFixed(2)}, ${center.y.toFixed(2)}, ${center.z.toFixed(2)}\n` +
-        `Size: ${size.x.toFixed(2)}, ${size.y.toFixed(2)}, ${size.z.toFixed(2)}`
-      );
+      // Fixed camera for your cropped map (~100m x 100m x 8m, centered near origin)
+      viewer.scene.view.position.set(120, -120, 45);
+      viewer.scene.view.lookAt(new THREE.Vector3(0, 0, 2));
     });
   </script>
 </body>
