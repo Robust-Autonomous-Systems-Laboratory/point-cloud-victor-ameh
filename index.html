@@ -27,7 +27,7 @@
       left: 0;
       right: 0;
       z-index: 1000;
-      background: rgba(0, 0, 0, 0.9);
+      background: rgba(0, 0, 0, 0.95);
       color: #fff;
       text-align: center;
       font-size: 20px;
@@ -40,8 +40,6 @@
       position: absolute;
       top: 56px;
       left: 0;
-      right: 0;
-      bottom: 0;
       width: 100%;
       height: calc(100% - 56px);
       background: #000;
@@ -75,7 +73,7 @@
   <script src="./resources/page_template/libs/plasio/js/laslaz.js"></script>
 
   <script>
-    const viewer = new Potree.Viewer(document.getElementById("potree_render_area"));
+    window.viewer = new Potree.Viewer(document.getElementById("potree_render_area"));
 
     viewer.setEDLEnabled(false);
     viewer.setFOV(60);
