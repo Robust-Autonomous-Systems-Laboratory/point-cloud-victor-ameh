@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>EE5531 - Victor - 3D LiDAR Map v4</title>
+  <title>EE5531 - Victor - 3D LiDAR Map v5</title>
 
   <link rel="stylesheet" type="text/css" href="./resources/page_template/libs/potree/potree.css">
   <link rel="stylesheet" type="text/css" href="./resources/page_template/libs/jquery-ui/jquery-ui.min.css">
@@ -67,20 +67,11 @@
       border-radius: 8px;
       white-space: pre-wrap;
     }
-
-    #statusbox.ok {
-      border-color: #2e7d32;
-    }
-
-    #statusbox.err {
-      border-color: #c62828;
-      color: #ffb3b3;
-    }
   </style>
 </head>
 
 <body>
-  <div id="titlebar">EE5531 - Victor - 3D LiDAR Map v4</div>
+  <div id="titlebar">EE5531 - Victor - 3D LiDAR Map v5</div>
   <div id="potree_render_area"></div>
   <div id="potree_sidebar_container"></div>
   <div id="statusbox">Loading viewer...</div>
@@ -100,68 +91,57 @@
 
   <script>
     const statusBox = document.getElementById("statusbox");
-    function setStatus(msg, isError = false, isOk = false) {
-      statusBox.textContent = msg;
-      statusBox.className = isError ? "err" : (isOk ? "ok" : "");
-    }
-
-    window.onerror = function(message, source, lineno, colno) {
-      setStatus(`JS error:\n${message}\n${source || ""}:${lineno || ""}:${colno || ""}`, true);
-    };
-
-    window.onunhandledrejection = function(event) {
-      const msg = event?.reason?.message || String(event?.reason || "Unhandled promise rejection");
-      setStatus(`Promise error:\n${msg}`, true);
-    };
-
     const metadataUrl = "./pointclouds/victor_0.mcap/metadata.json";
 
-    setStatus("Checking metadata...");
+    function setStatus(msg) {
+      statusBox.textContent = msg;
+    }
 
-    fetch(metadataUrl, { cache: "no-store" })
-      .then((res) => {
-        if (!res.ok) throw new Error(`metadata fetch failed: ${res.status} ${res.statusText}`);
-        return res.json();
-      })
-      .then(() => {
-        setStatus("Metadata OK. Loading point cloud...");
+    window.viewer = new Potree.Viewer(document.getElementById("potree_render_area"));
+    viewer.setEDLEnabled(false);
+    viewer.setFOV(60);
+    viewer.setPointBudget(2000000);
+    viewer.setBackground("black");
 
-        window.viewer = new Potree.Viewer(document.getElementById("potree_render_area"));
-        viewer.setEDLEnabled(false);
-        viewer.setFOV(60);
-        viewer.setPointBudget(2000000);
-        viewer.setBackground("black");
+    Potree.loadPointCloud(metadataUrl, "map", function (e) {
+      const pointcloud = e.pointcloud;
+      const material = pointcloud.material;
 
-        Potree.loadPointCloud(metadataUrl, "map", function (e) {
-          if (!e || !e.pointcloud) {
-            setStatus("Potree returned no point cloud object.", true);
-            return;
-          }
+      material.activeAttributeName = "elevation";
+      material.elevationRange = [-2, 8];
+      material.pointSizeType = Potree.PointSizeType.ADAPTIVE;
+      material.shape = Potree.PointShape.SQUARE;
+      material.size = 1.5;
 
-          const pointcloud = e.pointcloud;
-          const material = pointcloud.material;
+      viewer.scene.addPointCloud(pointcloud);
 
-          material.activeAttributeName = "elevation";
-          material.elevationRange = [-2, 8];
-          material.pointSizeType = Potree.PointSizeType.ADAPTIVE;
-          material.shape = Potree.PointShape.SQUARE;
-          material.size = 1.0;
+      const box = pointcloud.boundingBox.clone();
+      const center = box.getCenter(new THREE.Vector3());
+      const size = box.getSize(new THREE.Vector3());
+      const maxDim = Math.max(size.x, size.y, size.z);
 
-          viewer.scene.addPointCloud(pointcloud);
+      const camPos = new THREE.Vector3(
+        center.x + maxDim * 1.2,
+        center.y - maxDim * 1.2,
+        center.z + maxDim * 0.6
+      );
 
-          setTimeout(() => {
-            try {
-              viewer.fitToScreen();
-              setStatus("Point cloud loaded.", false, true);
-            } catch (err) {
-              setStatus(`Loaded, but fit failed:\n${err.message}`, true);
-            }
-          }, 150);
-        });
-      })
-      .catch((err) => {
-        setStatus(`Load failed:\n${err.message}`, true);
-      });
+      viewer.scene.view.position.copy(camPos);
+      viewer.scene.view.lookAt(center);
+
+      setTimeout(() => {
+        try {
+          viewer.fitToScreen();
+        } catch (err) {
+          console.warn(err);
+        }
+      }, 300);
+
+      setStatus(
+        `Loaded.\nCenter: ${center.x.toFixed(2)}, ${center.y.toFixed(2)}, ${center.z.toFixed(2)}\n` +
+        `Size: ${size.x.toFixed(2)}, ${size.y.toFixed(2)}, ${size.z.toFixed(2)}`
+      );
+    });
   </script>
 </body>
 </html>
